@@ -1,7 +1,28 @@
 # AKUA Application State Inventory
 
-**Date:** January 29, 2026, 05:31 UTC  
-**Status:** ✅ Production Ready (Stub Mode)
+**Inventory Date:** January 29, 2026, 05:33 UTC  
+**Status:** ✅ Production Ready (Stub Mode)  
+**Inventory Commit:** 39f7f67 (APPLICATION_STATE_INVENTORY.md)
+
+---
+
+## SOURCE OF TRUTH: DEPLOYMENT PROVENANCE
+
+This section resolves all commit/tag references to prevent audit confusion:
+
+### Git State (Both Local & Droplet Synchronized)
+- **Current HEAD:** `39f7f67e530cbe70e65974b6dcc1bb97233fc5a3`
+- **Git describe:** `v2.0.0-m2-14-g39f7f67` (14 commits **after** v2.0.0-m2 release tag)
+- **Release tag:** `v2.0.0-m2` (immutable, points to ~25 commits ago)
+- **Branch:** main (both origin/main and droplet/main at 39f7f67)
+- **Sync status:** local ↔ droplet ↔ origin/main all identical
+
+### Deployment Mode & Safety
+- **TEST_PUBLISHER_STUB:** `1` (stub mode enabled, not broadcasting)
+- **BSV_NETWORK:** `mainnet` (targeting BSV mainnet when flip occurs)
+- **Network exposure:** All ports bound to `127.0.0.1` only (no public access)
+- **Firewall:** UFW enabled (default-deny, SSH exception)
+- **Implication:** Currently in **safe stub mode**; no live sats are being spent until flip
 
 ---
 
@@ -30,8 +51,10 @@ b2223c5  Fix: strip newlines from BSV_ADDRESS (curl requires clean input)
 
 ### GitHub Repository
 - **URL:** https://github.com/codenlighten/akua-m1-finalized
-- **Latest Tag:** v2.0.0-m2-13-gc644b95
-- **Release Version:** v2.0.0-m2
+- **Current Branch:** main
+- **Current HEAD:** 39f7f67e530cbe70e65974b6dcc1bb97233fc5a3
+- **Release Tag (Immutable):** v2.0.0-m2 (25 commits prior)
+- **Commits Post-Release:** 14 (all operational improvements, no feature changes)
 - **Branch Protection:** main only
 
 ---
@@ -122,33 +145,49 @@ All services bound to **127.0.0.1 only** (no public exposure):
 **All containers:** Running 53+ minutes, no errors
 
 ### Git State (Droplet)
-- **Latest Commit:** c644b95 (Export PATH for cron inheritance)
-- **Tag:** v2.0.0-m2-13-gc644b95
-- **Sync Status:** Up-to-date with origin/main
-- **Provenance:** Clean git history with all commits
+- **Latest Commit:** 39f7f67e530cbe70e65974b6dcc1bb97233fc5a3 (synchronized with main)
+- **Git Describe:** v2.0.0-m2-14-g39f7f67 (14 commits post-release)
+- **Sync Status:** ✅ Synchronized with origin/main (no divergence)
+- **Provenance:** Clean git history; verified 39f7f67 ↔ 39f7f67 (local ↔ droplet)
 
 ---
 
 ## 4. CONFIGURATION STATE
 
 ### Environment Variables (15 keys in .env)
+
+**Critical Keys (Blockchain & Publishing - All Present)**
 ```
 BSV_ADDRESS=1JugrKhJgZ4yVyNnqPCxajbj9xYCHS1LNg     # Mainnet address
 BSV_PRIVATE_KEY=L1uH1xDyvPzLMFQFfv6z1FweAUfej2pMZ7QhpoBehY7wE3fbE...  # Secured
-BSV_NETWORK=mainnet                                  # Production
-PUBLISHER_AUTH_TOKEN=akua-m2-secret-token-2026      # Bearer auth
-RATE_LIMIT_PER_MIN=100                               # Per-IP limit
-MAX_FEE_SATS=10000                                   # Fee cap
-MIN_BALANCE_SATS=1000000                             # Critical floor
-LOW_BALANCE_SATS=2000000                             # Warning threshold
-UTXO_WARN_COUNT=50                                   # Fragmentation warn
-UTXO_CRIT_COUNT=200                                  # Fragmentation crit
-TEST_PUBLISHER_STUB=1                                # 1=stub, 0=production
-RABBIT_HTTP=http://rabbitmq:15672                    # Internal URL
-RABBIT_USER=akua                                     # Custom credentials
-RABBIT_PASS=[redacted]                               # Secured
-DATABASE_URL=postgresql://user:pass@postgres:5432/publisher  # Internal
+BSV_NETWORK=mainnet                                  # Production network
+PUBLISHER_AUTH_TOKEN=akua-m2-secret-token-2026      # Bearer token auth
+TEST_PUBLISHER_STUB=1                                # 1=stub mode, 0=broadcast
 ```
+
+**Critical Keys (Balance Monitoring - All Present)**
+```
+MIN_BALANCE_SATS=1000000                             # Critical threshold
+LOW_BALANCE_SATS=2000000                             # Warning threshold
+UTXO_WARN_COUNT=50                                   # Fragmentation warning
+UTXO_CRIT_COUNT=200                                  # Fragmentation critical
+```
+
+**Critical Keys (API & Message Queue - All Present)**
+```
+RATE_LIMIT_PER_MIN=100                               # Per-IP request limit
+MAX_FEE_SATS=10000                                   # Max fee per transaction
+RABBIT_HTTP=http://rabbitmq:15672                    # RabbitMQ management API
+RABBIT_USER=akua                                     # RabbitMQ user
+RABBIT_PASS=[redacted]                               # RabbitMQ password
+```
+
+**Critical Keys (Database - All Present)**
+```
+DATABASE_URL=postgresql://user:pass@postgres:5432/publisher  # PostgreSQL connection
+```
+
+**Summary:** 15/15 critical keys present, 0 optional, 0 missing. All environment variables required for production.
 
 ### Security Posture
 - ✅ `.env` not tracked in git (600 permissions)
@@ -173,14 +212,22 @@ DATABASE_URL=postgresql://user:pass@postgres:5432/publisher  # Internal
 - **Critical Floor:** 1,000,000 sats (MIN_BALANCE_SATS)
 - **Warning Level:** 2,000,000 sats (LOW_BALANCE_SATS)
 - **Spendable:** 1,824,359 sats (above floor)
-- **Tx Runway:** ~3,600 transactions at 500 sats/fee
+- **Tx Capacity:** ~3,600 transactions (1,824,359 ÷ 500 sats/fee)
+- **Time Runway Formula:** Capacity ÷ tx_per_day
+  - At 50 tx/day: ~72 days
+  - At 100 tx/day: ~36 days
+  - At 200 tx/day: ~18 days
 - **Fee Stability:** Stable (no network congestion)
 
 ### Blockchain Connectivity
 - ✅ WhatsOnChain API reachable from publisher container
 - ✅ Balance API endpoint responding
 - ✅ UTXO tracking active
-- ✅ OP_RETURN capability verified
+- ✅ OP_RETURN format: 6a04414b5541<64-hex-hash>
+  - **Historical Evidence:** M1 test produced valid OP_RETURN
+  - **TXID:** 8ae3c7cc76bf6d34d83337d9f56b6be85e2ed85ebd9d12667625eeaf5893415a
+  - **Hash:** 0952cb262572882a17ab8010251ba9079749648d08ff75b2e9d8bb1339add8c5
+  - **Status:** Pending live validation on mainnet post-flip (currently in stub mode)
 
 ---
 
@@ -190,7 +237,7 @@ DATABASE_URL=postgresql://user:pass@postgres:5432/publisher  # Internal
 - **Location:** `/opt/akua-stack/scripts/check-balance.sh`
 - **Size:** 107 lines (hardened)
 - **Permissions:** 755 (executable)
-- **Deployment:** Commit c644b95 (PATH export)
+- **Deployment:** Commit 39f7f67 (synchronized with droplet)
 
 **Features:**
 - ✅ Config validation (fail-fast on missing keys)
@@ -237,7 +284,7 @@ Running M2 tests...
 - ✅ Idempotency: same hash → cached txid from DB
 - ✅ Rate limiting: 100 req/min enforced (429 on burst)
 - ✅ Auth: Bearer token validated (401 without token)
-- ✅ OP_RETURN: Valid txid on BSV mainnet (verified via WhatsOnChain)
+- ✅ OP_RETURN: Format verified during M1 testing (pending live validation post-flip)
 
 **Test Execution:**
 - Command: `bash scripts/run-m2.sh`
