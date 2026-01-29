@@ -6,9 +6,9 @@
 set -euo pipefail
 
 ENV=/opt/akua-stack/.env
-BSV_ADDR=$(grep '^BSV_ADDRESS=' "$ENV" | cut -d'=' -f2)
+BSV_ADDR=$(grep '^BSV_ADDRESS=' "$ENV" | cut -d'=' -f2 | tr -d '"')
 MIN_BALANCE=$(grep '^MIN_BALANCE_SATS=' "$ENV" | cut -d'=' -f2)
-LOW_BALANCE=${LOW_BALANCE_SATS:-2000000}  # Default 0.02 BSV if not set
+LOW_BALANCE=$(grep '^LOW_BALANCE_SATS=' "$ENV" | cut -d'=' -f2 || echo "2000000")  # Default 0.02 BSV if not set
 
 # Fetch balance from WhatsOnChain
 JSON=$(curl -fsS --max-time 8 "https://api.whatsonchain.com/v1/bsv/main/address/${BSV_ADDR}/balance")
