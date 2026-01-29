@@ -1,7 +1,8 @@
 # AKUA Blockchain Integration - Deployment Status
 
 **Last Updated:** January 29, 2026  
-**Current Milestone:** M2 - Test Suite & Production Hardening ✅ **COMPLETE - Ready for v2.0.0-m2 tag**
+**Current Milestone:** M2 - Test Suite & Production Hardening ✅ **COMPLETE - Production Ready**  
+**Deployment Status:** 🔒 **Secured & Validated** | ⏸️ **Stub Mode Active** | 🚀 **Ready to Flip**
 
 ---
 
@@ -21,11 +22,10 @@
 - [x] Docker installed and running (v29.2.0)
 - [x] Docker Compose available (v5.0.2)
 - [x] Firewall configured
-  - [x] Port 22 (SSH) - open
-  - [x] Port 5672 (RabbitMQ AMQP) - internal
-  - [x] Port 15672 (RabbitMQ Management UI) - external accessible
-  - [x] Port 8080 (hashsvc health/metrics) - internal
-  - [x] Port 8081 (publisher API) - internal
+  - [x] Port 22 (SSH) - open to public
+  - [x] UFW enabled with default-deny incoming
+  - [x] All service ports (8080, 8081, 5672, 15672) bound to 127.0.0.1 only
+  - [x] Services accessible only via SSH tunnel or localhost
 - [ ] DNS configured (if using domains) - not required for M1
 - [ ] System restart applied (pending kernel upgrade 6.8.0-71→6.8.0-90) - non-blocking
 
@@ -34,15 +34,32 @@
 - [x] `/opt/akua-stack/docker-compose.yml` deployed
 - [x] `/opt/akua-stack/hashsvc/` created with source files
 - [x] `/opt/akua-stack/publisher/` created with source files
+- [x] `/opt/akua-stack/scripts/` created with operational tools
+- [x] `/opt/akua-stack/docs/` created with procedures
+- [x] Git provenance restored (tag: v2.0.0-m2-deployed)
+- [x] `.env` secured (600 permissions, not tracked in git)
+
+### Operational Tools
+- [x] **Balance monitoring:** `scripts/check-balance.sh` (cron: every 4 hours)
+  - [x] Two-threshold alerting: `LOW_BALANCE_SATS=2000000` (warning), `MIN_BALANCE_SATS=1000000` (critical)
+  - [x] jq-based JSON parsing (robust, fail-fast)
+  - [x] Syslog integration: `journalctl -t akua-balance`
+- [x] **Production flip checklist:** `docs/PRODUCTION_FLIP_CHECKLIST.md`
+  - [x] 15-step operator procedure with validation
+  - [x] OP_RETURN format verification (AKUA prefix + hash)
+  - [x] Balance delta checks
+  - [x] Rollback procedures
+  - [x] Sign-off section for audit trail
 
 ---
 
 ## Services Status
 
 ### RabbitMQ (3.13-management)
-- [x] Container running (healthy, 5+ minutes uptime)
-- [x] Management UI reachable at http://143.198.43.229:15672
-- [x] Default credentials set (user: akua / akua_pass)
+- [x] Container running (healthy)
+- [x] Management UI bound to 127.0.0.1:15672 (SSH tunnel required)
+- [x] Custom credentials (user: akua)
+- [x] Default guest user removed (security hardening)
 - [x] Queues created (auto-declared by hashsvc):
   - [x] `iot.payload.in` (durable, 1 consumer)
   - [x] `iot.payload.out` (durable)

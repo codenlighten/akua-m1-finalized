@@ -2,6 +2,17 @@
 
 This guide covers switching from test/stub mode to production blockchain publishing.
 
+> **⚠️ For production flips, use the comprehensive operator checklist:**  
+> **[docs/PRODUCTION_FLIP_CHECKLIST.md](PRODUCTION_FLIP_CHECKLIST.md)**
+>
+> The checklist includes:
+> - Pre-flip verification steps
+> - Step-by-step flip commands with validation
+> - OP_RETURN format verification (AKUA prefix + hash)
+> - Balance delta checks
+> - Rollback procedures
+> - Operator sign-off section
+
 ---
 
 ## Prerequisites
@@ -12,6 +23,7 @@ Before flipping to production:
 2. ✅ Auth token configured (`PUBLISHER_AUTH_TOKEN`)
 3. ✅ BSV address funded with adequate balance
 4. ✅ Services healthy in stub mode
+5. ✅ Balance monitoring script active (`scripts/check-balance.sh` in cron)
 
 ---
 
@@ -37,6 +49,17 @@ curl -s "https://api.whatsonchain.com/v1/bsv/main/address/$ADDRESS/balance" | jq
   "unconfirmed": 0
 }
 ```
+
+**Balance monitoring:**
+- Script: `scripts/check-balance.sh` runs every 4 hours via cron
+- Thresholds: `LOW_BALANCE_SATS=2000000` (warning), `MIN_BALANCE_SATS=1000000` (critical)
+- Logs: `journalctl -t akua-balance -n 50` or `/var/log/syslog | grep akua-balance`
+
+**UTXO fragmentation monitoring:**
+- Check UTXO count: `curl -sS "https://api.whatsonchain.com/v1/bsv/main/address/$ADDRESS/unspent" | jq 'length'`
+- Warning threshold: > 50 UTXOs
+- Critical threshold: > 200 UTXOs (consolidation required)
+- High UTXO counts cause fee escalation and can block spending
 
 **Minimum recommended:** 0.01 BSV (1,000,000 sats) for initial testing
 
