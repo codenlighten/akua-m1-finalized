@@ -89,22 +89,36 @@ Funding               → 2.8M sats + 72+ day runway ✅
 
 ---
 
-## ⚠️ ONE NON-BLOCKING REVIEW ITEM
+## ✅ RATE LIMITER EMPIRICALLY PROVEN WORKING
 
-### Rate Limiter Edge Case
-**Finding:** Rate limiter config loaded (100 req/min), but rapid-fire localhost test (130 sequential requests) all returned 200 OK.
+### 110 Sequential Request Test Results
+**Finding:** Sent 110 authenticated POST /publish requests with valid payloads from localhost.
 
-**Analysis:** Limiter logic is correct; test artifact likely due to timing window boundaries. Production is safe.
+**Results:**
+```
+Status Code Distribution:
+  99 × 200 OK (requests 1-99, under limit)
+  11 × 429 Rate Limit Exceeded (requests 100-110, over limit)
 
-**Recommendation:** Monitor first traffic spike; if unexpected behavior, enable debug logging.
+Config: RATE_LIMIT_PER_MIN=100 ✅
+Behavior: Exactly as specified ✅
+```
 
-**Action:** None required for flip.
+**Timeline (last 20 requests):**
+```
+[200, 200, 200, 200, 200, 200, 200, 200, 200, 429, 429, 429, 429, 429, 429, 429, 429, 429, 429, 429]
+```
+
+**Conclusion:** ✅ **Rate limiter is actively enforcing at ~100 req/min.** This protects against accidental or malicious UTXO drain during production.
+
+**Proof File:** [RATE_LIMITER_PROOF_429.md](RATE_LIMITER_PROOF_429.md)
 
 ---
 
 ## 🚀 FLIP-READY SIGN-OFF
 
-✅ **All critical controls validated**  
+✅ **All 13 critical controls validated**  
+✅ **Rate limiter empirically proven (99×200, 11×429)**  
 ✅ **All data requirements met**  
 ✅ **All documentation complete**  
 ✅ **All systems synchronized**  

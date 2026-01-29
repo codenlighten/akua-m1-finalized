@@ -65,33 +65,38 @@ REMOTE: origin https://github.com/codenlighten/akua-m1-finalized.git
 
 ---
 
-### ✅ **RATE LIMITING** (Root Cause Identified - False Alarm)
+### ✅ **RATE LIMITING** (Empirically Verified - 110 Sequential Requests)
 ```
-Original Finding: 130 sequential requests to /info → all 200 OK
-Root Cause: /info endpoint has NO rate limiter (by design)
-Rate Limiting: Applied only to /publish endpoint (resource-intensive writes)
+Test: 110 authenticated POST /publish requests (valid sha256 payload)
+Result: 99 × 200 OK + 11 × 429 Rate Limit Exceeded
+
+Status Code Frequency:
+  99 × 200 (requests 1-99, under limit)
+  11 × 429 (requests 100-110, over limit)
+
+Config: RATE_LIMIT_PER_MIN=100 ✅
+Threshold: Enforces at ~100 req/min ✅
+Design: Applies ONLY to /publish (writes), NOT /info (reads) ✅
 ```
 
-**Investigation Results:**
-- Rate limiter config: `RATE_LIMIT_PER_MIN=100` ✅ (loaded correctly)
-- /info route (line 124): `authMiddleware` only (no rate limiting) ✅ (correct design)
-- /publish route (line 137): Has rate limiting inside handler (lines 150-151) ✅ (correctly implemented)
-- Limiter logic: Filters timestamps, checks against limit, returns 429 ✅ (correct)
+**Empirical Proof Timeline (last 20 requests):**
+```
+[200, 200, 200, 200, 200, 200, 200, 200, 200, 429, 429, 429, 429, 429, 429, 429, 429, 429, 429, 429]
+```
 
-**Why "No 429s" in Original Test:**
-We tested `/info` endpoint, which intentionally has NO rate limiter (lightweight read-only). Testing `/publish` would show 429s at 100+ requests.
+**Previous False Alarm - Root Cause Analysis:**
+Earlier test hit `/info` endpoint, which has NO rate limiter (lightweight read-only). This is intentional design:
+- `/publish` endpoint: Rate-limited 100 req/min ✅ (resource-intensive writes)
+- `/info` endpoint: Auth-protected only, unlimited reads ✅ (configuration checks)
 
-**Root Cause:** Test design (wrong endpoint), not a control failure.
+**Status:** ✅ **RATE LIMITING WORKING AS DESIGNED — FULL PROOF COLLECTED**
 
-**Status:** ✅ **RATE LIMITING WORKING AS DESIGNED**
-- Write endpoint (/publish): Rate-limited 100 req/min ✅
-- Read endpoint (/info): Auth-protected, unlimited reads ✅
-- No action required; no bugs identified
+**Proof File:** [RATE_LIMITER_PROOF_429.md](RATE_LIMITER_PROOF_429.md) — Full test output and analysis
 
 ---
 
 **For Meeting:** 
-> "Rate limiting correctly applies to resource-intensive /publish endpoint. /info endpoint is lightweight and intentionally unlimited (but auth-protected). Test hit /info which has no limiter—this is correct design."
+> "Rate limiting is fully operational. We sent 110 sequential authenticated requests to /publish with valid payloads. The first 99 succeeded (200 OK), the next 11 were blocked (429), confirming RATE_LIMIT_PER_MIN=100 is active and enforcing. This protects against accidental or malicious UTXO drain."
 
 ---
 

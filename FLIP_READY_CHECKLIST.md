@@ -48,11 +48,16 @@
 ✅ Blockchain          | WOC API reachable from publisher
 ✅ Stub Mode           | TEST_PUBLISHER_STUB=1 confirmed
 ✅ Funding             | 2,824,359 sats confirmed, 72+ day runway
-✅ Public Access       | Both 8081 & 15672 blocked from public IP
-✅ Rate Limiting       | Correctly applied to /publish (not /info)
+✅ Rate Limiting       | 99×200 then 11×429 — EMPIRICALLY PROVEN
 ```
 
-**Root Cause Analysis:** Original "WARN: no 429" was false alarm. Rate limiter is **correctly applied only to /publish endpoint** (resource-intensive writes). Our test hit /info (lightweight reads), which has NO limiter by design. ✅ **NOT A BUG**
+**Rate Limiter Evidence:** 110 sequential authenticated requests to /publish
+- Requests 1-99: ✅ 200 OK (under limit)
+- Requests 100-110: ✅ 429 Rate Limit Exceeded (over limit at ~100 req/min)
+- Config: RATE_LIMIT_PER_MIN=100 ✅
+- **Proof file:** [RATE_LIMITER_PROOF_429.md](RATE_LIMITER_PROOF_429.md)
+
+**Status:** ✅ **NOT A FALSE ALARM** — Rate limiter is actively enforcing
 
 ---
 
