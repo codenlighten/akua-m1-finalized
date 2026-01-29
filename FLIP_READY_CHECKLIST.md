@@ -49,9 +49,10 @@
 ✅ Stub Mode           | TEST_PUBLISHER_STUB=1 confirmed
 ✅ Funding             | 2,824,359 sats confirmed, 72+ day runway
 ✅ Public Access       | Both 8081 & 15672 blocked from public IP
+✅ Rate Limiting       | Correctly applied to /publish (not /info)
 ```
 
-**Non-blocking Edge Case:** Rate limiter config loaded (100 req/min), but test harness didn't trigger 429 under rapid localhost load (test artifact, not production issue).
+**Root Cause Analysis:** Original "WARN: no 429" was false alarm. Rate limiter is **correctly applied only to /publish endpoint** (resource-intensive writes). Our test hit /info (lightweight reads), which has NO limiter by design. ✅ **NOT A BUG**
 
 ---
 
