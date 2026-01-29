@@ -1,8 +1,8 @@
 # AKUA Blockchain Integration - Deployment Status
 
-**Last Updated:** January 29, 2026  
-**Current Milestone:** M2 - Test Suite & Production Hardening ✅ **COMPLETE - Production Ready**  
-**Deployment Status:** 🔒 **Secured & Validated** | ⏸️ **Stub Mode Active** | 🚀 **Ready to Flip**
+**Last Updated:** January 29, 2026 (17:20 UTC)  
+**Current Milestone:** M2 - Test Suite & Production Hardening ✅ **COMPLETE - Operationally Hardened**  
+**Deployment Status:** 🔒 **Secured & Validated** | ⏸️ **Stub Mode Active** | 🚀 **Ready to Flip** | ✅ **Monitoring Active**
 
 ---
 
@@ -41,15 +41,25 @@
 
 ### Operational Tools
 - [x] **Balance monitoring:** `scripts/check-balance.sh` (cron: every 4 hours)
+  - [x] Hardened config validation (fail-fast on missing/invalid .env)
   - [x] Two-threshold alerting: `LOW_BALANCE_SATS=2000000` (warning), `MIN_BALANCE_SATS=1000000` (critical)
-  - [x] jq-based JSON parsing (robust, fail-fast)
-  - [x] Syslog integration: `journalctl -t akua-balance`
+  - [x] JSON parsing strictness: validates WOC response before extraction
+  - [x] jq-based parsing (robust, portable)
+  - [x] Syslog integration: `journalctl -t akua-balance` (exit codes: 0=OK, 1=WARNING, 2=CRITICAL)
+  - [x] UTXO fragmentation monitoring: warns at 50+ outputs, critical at 200+
+  - [x] Cron-safe execution: absolute paths, explicit PATH, fail-fast design
+  - [x] **Current status:** Balance 2,824,359 sats (1 UTXO, healthy)
 - [x] **Production flip checklist:** `docs/PRODUCTION_FLIP_CHECKLIST.md`
   - [x] 15-step operator procedure with validation
   - [x] OP_RETURN format verification (AKUA prefix + hash)
   - [x] Balance delta checks
   - [x] Rollback procedures
   - [x] Sign-off section for audit trail
+- [x] **Operations reference:** `docs/PRODUCTION_OPS_REFERENCE.md`
+  - [x] Common operational tasks (balance check, UTXO monitoring, service health)
+  - [x] Emergency procedures (service restart, database issues, balance critical)
+  - [x] Testing & verification commands
+  - [x] SSH tunnel access for web UIs
 
 ---
 
