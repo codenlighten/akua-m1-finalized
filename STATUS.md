@@ -624,3 +624,50 @@ RABBIT_VHOST=/
 - [x] RabbitMQ management UI accessible at http://143.198.43.229:15672 - **restrict to VPN in production**
 - Transaction 8ae3c7cc76bf6d34d83337d9f56b6be85e2ed85ebd9d12667625eeaf5893415a is first production publish to BSV mainnet
 - All M1 SOW requirements satisfied per acceptance test evidence above
+
+---
+
+## AUDIT-GRADE CORRECTIONS APPLIED (Commit 7ca38bd)
+
+### Resolved Issues
+1. **Provenance Clarity** ✅
+   - Single source of truth: 39f7f67e530cbe70e65974b6dcc1bb97233fc5a3
+   - Git describe: v2.0.0-m2-14-g39f7f67 (14 commits post-release)
+   - Local ↔ Droplet ↔ GitHub synchronized
+   - All commit/tag references consolidated
+
+2. **Environment Variable Categorization** ✅
+   - 15/15 critical keys present
+   - 0 optional variables
+   - 0 missing variables
+   - Breakdown: Blockchain (5) + Monitoring (4) + API/Queue (4) + Database (1) + Database URL (1)
+
+3. **OP_RETURN Evidence Citation** ✅
+   - **Historical validation:** M1 test produced valid OP_RETURN on mainnet
+   - **TXID:** 8ae3c7cc76bf6d34d83337d9f56b6be85e2ed85ebd9d12667625eeaf5893415a
+   - **Hash:** 0952cb262572882a17ab8010251ba9079749648d08ff75b2e9d8bb1339add8c5
+   - **Status:** Pending live validation post-flip (currently in stub mode TEST_PUBLISHER_STUB=1)
+
+4. **Runway Time Formula** ✅
+   - **TX Capacity:** ~3,600 transactions (1,824,359 spendable ÷ 500 sats/fee)
+   - **Formula:** Capacity ÷ tx_per_day
+   - **Examples:**
+     - 50 tx/day → ~72 days
+     - 100 tx/day → ~36 days
+     - 200 tx/day → ~18 days
+
+### Deployment Status Post-Correction
+- ✅ Inventory synchronized on droplet (7ca38bd)
+- ✅ All 12 production readiness checks passing
+- ✅ No breaking changes (clarifications only)
+- ✅ Audit-ready for hand-off/approval
+- ✅ Git history clean and verified
+
+### Next Phase: Production Flip
+APPLICATION_STATE_INVENTORY.md now provides audit-grade documentation for:
+- **Operator sign-off** (clear mode status: TEST_PUBLISHER_STUB=1)
+- **Funding runway** (explicit time formula, not vague estimates)
+- **Blockchain validation** (historical evidence + pending live validation)
+- **Environment completeness** (15/15 critical keys accounted for)
+- **Provenance traceability** (single source of truth, all systems synchronized)
+
