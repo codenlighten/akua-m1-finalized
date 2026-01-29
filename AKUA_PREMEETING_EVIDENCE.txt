@@ -1,0 +1,138 @@
+=== AKUA PRE-MEETING VALIDATION (2026-01-29T05:43:24Z UTC) ===
+Host: root@143.198.43.229
+Root: /opt/akua-stack
+
+--- PROVENANCE ---
+HEAD: 163eb4d
+DESCRIBE: v2.0.0-m2-17-g163eb4d
+REMOTE: origin https://github.com/codenlighten/akua-m1-finalized.git (fetch)
+LAST 3:
+163eb4d Add audit corrections summary: 4 issues resolved (provenance, evidence, formulas, categorization)
+170e4eb Update STATUS: audit-grade corrections complete (7ca38bd)
+7ca38bd Audit-grade corrections: provenance clarity, env var categorization, OP_RETURN evidence citation, explicit runway formula
+
+--- DOCKER HEALTH ---
+NAME                     IMAGE                      COMMAND                  SERVICE     CREATED             STATUS                       PORTS
+akua-stack-hashsvc-1     akua-stack-hashsvc         "docker-entrypoint.s…"   hashsvc     About an hour ago   Up About an hour (healthy)   127.0.0.1:8080->8080/tcp
+akua-stack-postgres-1    postgres:16-alpine         "docker-entrypoint.s…"   postgres    About an hour ago   Up About an hour (healthy)   5432/tcp
+akua-stack-publisher-1   akua-stack-publisher       "docker-entrypoint.s…"   publisher   About an hour ago   Up About an hour (healthy)   127.0.0.1:8081->8080/tcp
+akua-stack-rabbitmq-1    rabbitmq:3.13-management   "docker-entrypoint.s…"   rabbitmq    About an hour ago   Up About an hour (healthy)   4369/tcp, 5671/tcp, 127.0.0.1:5672->5672/tcp, 15671/tcp, 15691-15692/tcp, 25672/tcp, 127.0.0.1:15672->15672/tcp
+
+--- PORT BINDINGS (docker ps) ---
+NAMES                    PORTS
+akua-stack-hashsvc-1     127.0.0.1:8080->8080/tcp
+akua-stack-publisher-1   127.0.0.1:8081->8080/tcp
+akua-stack-postgres-1    5432/tcp
+akua-stack-rabbitmq-1    4369/tcp, 5671/tcp, 127.0.0.1:5672->5672/tcp, 15671/tcp, 15691-15692/tcp, 25672/tcp, 127.0.0.1:15672->15672/tcp
+
+--- LISTENING SOCKETS (8080/8081/15672/5672) ---
+tcp   LISTEN 0      4096       127.0.0.1:15672      0.0.0.0:*    users:(("docker-proxy",pid=51488,fd=8))                 
+tcp   LISTEN 0      4096       127.0.0.1:8080       0.0.0.0:*    users:(("docker-proxy",pid=51870,fd=8))                 
+tcp   LISTEN 0      4096       127.0.0.1:8081       0.0.0.0:*    users:(("docker-proxy",pid=51676,fd=8))                 
+tcp   LISTEN 0      4096       127.0.0.1:5672       0.0.0.0:*    users:(("docker-proxy",pid=51467,fd=8))                 
+
+--- UFW ---
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), deny (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere                  
+22/tcp (v6)                ALLOW IN    Anywhere (v6)             
+
+
+--- PUBLIC ACCESS TESTS (from your local machine) ---
+OK: publisher not reachable publicly
+OK: rabbitmq ui not reachable publicly
+
+--- AUTH ENFORCEMENT ---
+Has token: yes
+
+[NO AUTH] /info (expect 401):
+HTTP/1.1 401 Unauthorized
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 76
+ETag: W/"4c-GccM72zeHAgoHz+damFIRU/2gAM"
+Date: Thu, 29 Jan 2026 05:43:31 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"error":"Unauthorized","message":"Missing or invalid authorization header"}
+[WITH AUTH] /info (expect 200):
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 118
+ETag: W/"76-uOsCzHiN5E90UA01AoofiM3wo4o"
+Date: Thu, 29 Jan 2026 05:43:31 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"version":"2.0.0-m2","network":"mainnet","stubMode":true,"authEnabled":true,"rateLimitPerMin":100,"maxFeeSats":10000}
+--- RATE LIMIT SMOKE (expect at least one 429 if limiter active) ---
+200_count=130 429_count=0
+WARN: no 429 observed (check limiter config)
+
+--- LOG HYGIENE SCAN (heuristic) ---
+OK: no obvious secrets found in last 400 lines
+
+--- BALANCE MONITOR ---
+OK: Balance 2824359 sats (unconfirmed: 0; UTXOs: 1)
+exit_code=0
+
+--- THRESHOLDS ---
+MIN_BALANCE_SATS=1000000
+LOW_BALANCE_SATS=2000000
+UTXO_WARN_COUNT=50
+UTXO_CRIT_COUNT=200
+
+--- CRON JOB ---
+0 */4 * * * /opt/akua-stack/scripts/check-balance.sh >/dev/null 2>&1
+
+--- LAST JOURNAL ENTRY (akua-balance) ---
+Jan 29 05:43:37 harvest-db akua-balance[77895]: OK: confirmed=2824359 sats; unconfirmed=0; utxos=1; low=2000000; floor=1000000
+
+--- RABBITMQ USERS (no guest) ---
+Listing users ...
+user	tags
+akua	[administrator]
+
+--- WOC CONNECTIVITY (publisher container) ---
+Whats On Chain
+
+--- FLIP READINESS (stub mode + network target) ---
+BSV_NETWORK=mainnetBSV_NETWORK=mainnet
+TEST_PUBLISHER_STUB=1
+
+--- DATABASE CHECK ---
+ postgres  | publisher | UTF8     | libc            | en_US.utf8 | en_US.utf8 |            |           | 
+ publisher | publisher | UTF8     | libc            | en_US.utf8 | en_US.utf8 |            |           | 
+ template0 | publisher | UTF8     | libc            | en_US.utf8 | en_US.utf8 |            |           | =c/publisher           +
+           |           |          |                 |            |            |            |           | publisher=CTc/publisher
+ template1 | publisher | UTF8     | libc            | en_US.utf8 | en_US.utf8 |            |           | =c/publisher           +
+           |           |          |                 |            |            |            |           | publisher=CTc/publisher
+Table structure (publish_records):
+                                         Table "public.publish_records"
+    Column    |            Type             | Collation | Nullable |                   Default                   
+--------------+-----------------------------+-----------+----------+---------------------------------------------
+ id           | integer                     |           | not null | nextval('publish_records_id_seq'::regclass)
+ sha256       | character varying(64)       |           | not null | 
+ txid         | character varying(255)      |           | not null | 
+ status       | character varying(50)       |           | not null | 
+ network      | character varying(50)       |           | not null | 
+ meta         | jsonb                       |           |          | 
+ published_at | timestamp without time zone |           | not null | now()
+ created_at   | timestamp without time zone |           | not null | now()
+Indexes:
+    "publish_records_pkey" PRIMARY KEY, btree (id)
+    "idx_publish_records_sha256" btree (sha256)
+    "publish_records_sha256_key" UNIQUE CONSTRAINT, btree (sha256)
+
+
+=== SUMMARY ===
+All checks complete. Review output for WARN/UNEXPECTED lines.
+Timestamp: 2026-01-29T05:43:24Z UTC
+
