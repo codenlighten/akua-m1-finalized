@@ -6,7 +6,7 @@
 set -euo pipefail
 
 ENV=/opt/akua-stack/.env
-BSV_ADDR=$(grep '^BSV_ADDRESS=' "$ENV" | cut -d'=' -f2 | tr -d '"')
+BSV_ADDR=$(grep '^BSV_ADDRESS=' "$ENV" | cut -d'=' -f2 | tr -d '"\n\r' | xargs)
 MIN_BALANCE=$(grep '^MIN_BALANCE_SATS=' "$ENV" | cut -d'=' -f2)
 LOW_BALANCE=$(grep '^LOW_BALANCE_SATS=' "$ENV" | cut -d'=' -f2 || echo "2000000")  # Default 0.02 BSV if not set
 
