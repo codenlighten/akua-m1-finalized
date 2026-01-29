@@ -1,5 +1,6 @@
 const express = require('express');
 const pino = require('pino');
+const crypto = require('crypto');
 const { initDB, closeDB } = require('./db');
 const { publishToBlockchain, getPublishRecord } = require('./blockchain');
 
@@ -78,7 +79,19 @@ function authMiddleware(req, res, next) {
   
   const token = authHeader.substring(7);
   
-  if (token !== config.authToken) {
+  // Timing-safe comparison to prevent timing attacks
+  const tokenValid = (() => {
+    try {
+      const tokenBuf = Buffer.from(token);
+      const configBuf = Buffer.from(config.authToken);
+      if (tokenBuf.length !== configBuf.length) return false;
+      return crypto.timingSafeEqual(tokenBuf, configBuf);
+    } catch {
+      return false;
+    }
+  })();
+  
+  if (!tokenValid) {
     return res.status(403).json({
       error: 'Forbidden',
       message: 'Invalid authorization token'

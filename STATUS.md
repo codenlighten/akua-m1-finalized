@@ -414,7 +414,7 @@ Response: HTTP 401
 ```bash
 curl -X POST http://localhost:8081/publish \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer akua-m2-secret-token-2026" \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN_HERE" \
   -d '{"sha256":"0000...0888"}'
 
 Response: HTTP 200
@@ -440,7 +440,7 @@ BSV_PRIVATE_KEY=[redacted]
 BSV_NETWORK=mainnet
 
 # M2 Security
-PUBLISHER_AUTH_TOKEN=akua-m2-secret-token-2026
+PUBLISHER_AUTH_TOKEN=YOUR_SECRET_TOKEN_CHANGE_ME
 RATE_LIMIT_PER_MIN=100
 MAX_FEE_SATS=10000
 MIN_BALANCE_SATS=1000000

@@ -122,8 +122,8 @@ Create `/opt/akua-stack/.env` with your BSV credentials:
 
 ```bash
 cat > /opt/akua-stack/.env << 'EOF'
-BSV_ADDRESS=1JugrKhJgZ4yVyNnqPCxajbj9xYCHS1LNg
-BSV_PRIVATE_KEY=L1uH1xDyvPzLMFQFfv6z1FweAUfej2pMZ7QhpoBehY7wE3fbEFKa
+BSV_ADDRESS=YOUR_BSV_ADDRESS_HERE
+BSV_PRIVATE_KEY=YOUR_PRIVATE_KEY_WIF_HERE
 BSV_NETWORK=mainnet
 EOF
 
