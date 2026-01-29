@@ -1,0 +1,29 @@
+{
+  "name": "akua-hashsvc",
+  "version": "1.0.0",
+  "description": "AKUA Hash+Envelope Service - JSON hashing and blockchain publishing",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "node --test test/**/*.test.js",
+    "test:unit": "node --test test/unit/*.test.js",
+    "test:integration": "node --test test/integration/*.test.js"
+  },
+  "keywords": ["blockchain", "rabbitmq", "hash", "akua"],
+  "author": "SmartLedger",
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "axios": "^1.6.5",
+    "express": "^4.18.2",
+    "pino": "^8.17.2",
+    "pino-pretty": "^10.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,102 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: akua
+      RABBITMQ_DEFAULT_PASS: akua_pass
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: publisher
+      POSTGRES_USER: publisher
+      POSTGRES_PASSWORD: publisher_pass
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U publisher"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  publisher:
+    build:
+      context: ./publisher
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgres://publisher:publisher_pass@postgres:5432/publisher
+      NETWORK: mainnet
+      # BSV Blockchain credentials
+      BSV_ADDRESS: ${BSV_ADDRESS}
+      BSV_PRIVATE_KEY: ${BSV_PRIVATE_KEY}
+      BSV_NETWORK: ${BSV_NETWORK:-mainnet}
+      # M2 production hardening
+      PUBLISHER_AUTH_TOKEN: ${PUBLISHER_AUTH_TOKEN}
+      RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-100}
+      MAX_FEE_SATS: ${MAX_FEE_SATS:-10000}
+      MIN_BALANCE_SATS: ${MIN_BALANCE_SATS:-1000000}
+      # M2 test mode (set to 1 for tests, 0 for production)
+      TEST_PUBLISHER_STUB: ${TEST_PUBLISHER_STUB:-0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  hashsvc:
+    build:
+      context: ./hashsvc
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      RABBIT_URL: amqp://akua:akua_pass@rabbitmq:5672
+      IN_QUEUE: iot.payload.in
+      OUT_QUEUE: iot.payload.out
+      MAX_ATTEMPTS: 5
+      PUBLISHER_URL: http://publisher:8080/publish
+      PUBLISHER_TIMEOUT_MS: 8000
+      LOG_LEVEL: info
+      # M2 auth token for calling publisher
+      PUBLISHER_AUTH_TOKEN: ${PUBLISHER_AUTH_TOKEN}
+      # M2 test mode (RabbitMQ management API config for tests)
+      RABBIT_HTTP: ${RABBIT_HTTP:-http://rabbitmq:15672}
+      RABBIT_USER: ${RABBIT_USER:-akua}
+      RABBIT_PASS: ${RABBIT_PASS:-akua_pass}
+      RABBIT_VHOST: ${RABBIT_VHOST:-/}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      publisher:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  rabbitmq_data:
+  pg_data:
